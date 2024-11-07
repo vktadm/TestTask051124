@@ -4,8 +4,11 @@ import pandas as pd
 import numpy as np
 
 import matplotlib.pyplot as plt
-from datetime import datetime as dt
-import locale
+
+def print_file(data):
+    file = open('output.txt', 'a')
+    file.write(data)
+    file.close()
 
 def find_date(string):
     """Замена 'Январь 2021' -> '2021-01-01'."""
@@ -61,39 +64,46 @@ def question1(df):
                   & (df['receiving_date'].dt.year == 2021)
                   & (df['status'] == 'ОПЛАЧЕНО')]
     sum = data['sum'].sum()
-    print('Вопрос 1.')
-    print('Общая выручка за ИЮЛЬ 2021 года: ' + str(round(sum, 2))  + '\n')
+
+    file_data = f'Вопрос 1.\nОбщая выручка за ИЮЛЬ 2021 года: {str(round(sum, 2))}\n\n'
+    print_file(file_data)
 
 def question2(df):
-    data = df[(df['status'] == 'ОПЛАЧЕНО')].groupby(pd.Grouper(key='receiving_date', axis=0, freq='M')).sum()
-    serias = data['sum']
+    data = df[(df['status'] == 'ОПЛАЧЕНО')].groupby(pd.Grouper(key='receiving_date', axis=0, freq='ME'))
+    serias = data.agg({'sum': 'sum'})['sum']
     serias.index = serias.index.map(lambda seria: seria.month_name())
-    serias.plot(kind='bar',
-                title='Изменение выручки компании за год')
-    print('Вопрос 2.')
-    plt.show()
+    serias.plot(kind='bar', title='Изменение выручки компании за год')
+
+    plt.savefig('gist.png')
+
+    file_data = 'Вопрос 2.\nГистограмма с результатами в файле gist.png\n\n'
+    print_file(file_data)
 
 def question3(df):
     data = df[(df['receiving_date'].dt.month == 9)
               & (df['receiving_date'].dt.year == 2021)].groupby('sale')
     aggregated = data.agg({'sum': 'sum'})
-    print('Вопрос 3.')
-    print(f'За СЕНТЯБРЬ 2021 наибольшую прибыль принес менеджер: {aggregated['sum'].idxmax()}\n'
-          f'В размере: {aggregated['sum'].max()}\n')
+
+    file_data = f'Вопрос 3.\nЗа СЕНТЯБРЬ 2021 наибольшую прибыль принес менеджер: {aggregated['sum'].idxmax()}\n'\
+                f'В размере: {aggregated['sum'].max()}\n\n'
+    print_file(file_data)
 
 def question4(df):
     data = df[(df['receiving_date'].dt.month == 10)
              & (df['receiving_date'].dt.year == 2021)].groupby('new/current')
     aggregated = data.agg({'new/current': 'count'})
-    print(f'В октябре преобладал тип сделок: "{aggregated['new/current'].idxmax()}"\n'
-          f'Колличество: {aggregated['new/current'].max()}\n')
+
+    file_data = (f'Вопрос 4.\nВ октябре преобладал тип сделок: "{aggregated['new/current'].idxmax()}"\n'
+                 f'Количество: {aggregated['new/current'].max()}\n\n')
+    print_file(file_data)
 
 def question5(df):
     data = df[(df['month'].dt.month == 5)
               & (df['receiving_date'].dt.year == 2021)
               & (df['receiving_date'].dt.month == 6)
               & (df['document'] == 'оригинал')]
-    print(data['document'].count())
+    file_data = f'Вопрос 5.\nКоличество оригиналов договоров за май: {data['document'].count()}'
+    print_file(file_data)
 
 
 
@@ -102,8 +112,8 @@ df = read_data('data.xlsx', 'Лист1')
 if df is None:
     print('Файла с таким именем не существует')
 else:
-    # question1(df)
-    # question2(df)
+    question1(df)
+    question2(df)
     question3(df)
     question4(df)
     question5(df)
